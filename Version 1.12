@@ -54,6 +54,7 @@ struct Skills{
     int cooldownDisarm;
     int cooldownGates;
     bool hasActiveGate;
+    bool hasHealGate;
 };
 //Create and initialize usable variables from Skills
 Skills playerSkills;
@@ -92,19 +93,21 @@ void EXPtoSkills(){
 struct Debuffs{
     double multiplierCrashout;
     bool hasCrashedOut;         //aka Gate End Debuff
+    bool bossStunned;
 };
 struct Buffs{
     bool masteryEightGates;
 };
 //Create usable variables from Debuffs
 Debuffs debuff;
-void initializeplayerdebuffs(){
+void initializedebuffs(){
     debuff.multiplierCrashout   = 1.5;
     debuff.hasCrashedOut        = false;
+    debuff.bossStunned          = false;
 }
 //Create usable variables from Buffs
 Buffs buff;
-void initializeplayerbuffs(){
+void initializebuffs(){
     buff.masteryEightGates      = false;
 }
 //Function for checking EXP for getting Buffs
@@ -144,11 +147,13 @@ Input player;
 struct Iterations{
     int i;
     int j;
+    bool turnSkip;
 };
 Iterations iter;
 void initializeiterations(){
     iter.i = 1;
     iter.j = 1;
+    iter.turnSkip = false;
 }
 
 //Function for EXP cap
@@ -242,8 +247,8 @@ int main(){
     initializeplayerstats();
     initializebossstats();
     initializeplayerskills();
-    initializeplayerdebuffs();
-    initializeplayerbuffs();
+    initializedebuffs();
+    initializebuffs();
     initializetrainingbonuses();
     initializeiterations();
     //Menu
@@ -393,6 +398,7 @@ int main(){
 	    //This section (to here) is for HP
 	    
 	    cout << "[1] Attack" << endl;
+	    
 	    if (!playerSkills.discoveredStagger) {
             cout << "[2] -------" << endl;
         } else if (playerSkills.cooldownStagger > 0) {
@@ -409,15 +415,24 @@ int main(){
             cout << "[3] Disarm" << endl;
         }
 	    
+	    if (!playerSkills.discoveredEightGates && !playerSkills.hasActiveGate){
+	        cout << "[4] ----- -----" << endl;
+	    } 
+	    if (playerSkills.discoveredEightGates && !playerSkills.hasActiveGate){
+	        cout << "[4] Eight Gates" << endl;
+	    }
 	    if (playerSkills.discoveredEightGates && playerSkills.hasActiveGate){
-	        if (playerSkills.discoveredHealGates && playerSkills.hasHealGate){
-	            cout << "[4] ACTIVE (G2)" << endl;
+	        if (!playerSkills.discoveredHealGates && !playerSkills.hasHealGate){
+	            cout << "[4] |ACTIVE (G1)|" << endl;
 	        }
 	        if (playerSkills.discoveredHealGates && !playerSkills.hasHealGate){
-	            cout << "[4] Summon Heal Gate" << endl;
+	            cout << "[4] Heal Gates |ACTIVE (G1)|" << endl;
+	        }
+	        if (playerSkills.discoveredHealGates && playerSkills.hasHealGate){
+	            cout << "[4] |ACTIVE (G2)|" << endl;
 	        }
 	    }
-	    
+	        
         
         cin >> player.input;
         
@@ -426,32 +441,46 @@ int main(){
                 bossStats.arHP = bossStats.arHP - playerStats.keiATK;
             break;
             case 2:
-                if (playerSkills.discoveredStagger){
-                bossStats.arHP = bossStats.arHP - playerStats.keiATK;
-                playerSkills.cooldownStagger = 3;
-                continue;
-                } else {
+                if (!playerSkills.discoveredStagger) {
                     cout << "Skill locked." << endl;
-                    iter.j--;
-                    continue;
+                    iter.turnSkip = true;
+                } else if (playerSkills.cooldownStagger > 0) {
+                    cout << "On cooldown." << endl;
+                    playerSkills.cooldownDisarm++;
+                    iter.turnSkip = true;
+                } else {
+                    bossStats.arHP = bossStats.arHP - playerStats.keiATK;
+                    playerStats.keiEP-= 5;
+                    debuff.bossStunned = true;
                 }
             break;
             case 3:
-                if (playerSkills.discoveredDisarm){
-                bossStats.arHP = bossStats.arHP - playerStats.keiATK;
-                playerSkills.cooldownDisarm = 3;
-                continue;
-                } else {
+                if (!playerSkills.discoveredDisarm) {
                     cout << "Skill locked." << endl;
-                    iter.j--;
-                    continue;
+                    iter.turnSkip = true;
+                } else if (playerSkills.cooldownDisarm > 0) {
+                    cout << "On cooldown." << endl;
+                    playerSkills.cooldownDisarm++;
+                    iter.turnSkip = true;
+                } else {
+                    bossStats.arHP = bossStats.arHP - playerStats.keiATK;
+                    playerStats.keiEP-= 5;
+                    debuff.bossStunned = true;
                 }
             break;
             case 4:
-                
+	            
             break;
             default:
+                bossStats.arHP = bossStats.arHP - playerStats.keiATK;
             break;
+        }
+        
+        if (debuff.bossStunned == true || iter.turnSkip == true){
+            iter.j--;
+            debuff.bossStunned = false;
+            iter.turnSkip = false;
+            continue;
         }
 	}
     return 0;

@@ -1,0 +1,578 @@
+//This file serves as a backup.
+
+#include <iostream>
+#include <string>
+#include <fstream>
+#include <iomanip>
+using namespace std;
+//Dev notes are here to explain this stuff to myself, incase I forgot
+
+//Set variables for statistics
+struct Stats{
+    //player
+    float keimaxHP;
+    float keiHP;
+    float keiATK;
+    float keiEND;
+    float keimaxEP;
+    float keiEP;
+    float keiEPregen;
+    float keiEXP;
+    bool keiHasmaxEXP;
+    //boss
+    float armaxHP;
+    float arHP;
+    float arATK;
+    float arEND;
+};
+//Create usable variables from Stats
+Stats playerStats, bossStats;                 
+void initializeplayerstats(){                    
+    playerStats.keimaxHP        = 50;
+    playerStats.keiHP           = 50;
+    playerStats.keiATK          = 10;
+    playerStats.keiEND          = 15;
+    playerStats.keimaxEP        = 5;
+    playerStats.keiEP           = 5;
+    playerStats.keiEPregen      = 0;
+    playerStats.keiEXP          = 0;
+    playerStats.keiHasmaxEXP    = false;
+}
+void initializebossstats(){
+    bossStats.armaxHP       = 2500;
+    bossStats.arHP          = 2500;
+    bossStats.arATK         = 520;
+    bossStats.arEND         = 600;
+}
+
+//Set variables for skills
+struct Skills{
+    //player
+    bool discoveredStagger;
+    bool discoveredDisarm;
+    bool discoveredEightGates;
+    bool discoveredHealGates;
+    int cooldownStagger;
+    int cooldownDisarm;
+    int cooldownGates;
+    bool hasActiveGate;
+    bool hasHealGate;
+};
+//Create and initialize usable variables from Skills
+Skills playerSkills;
+void initializeplayerskills(){
+    playerSkills.discoveredStagger      = false;
+    playerSkills.discoveredDisarm       = false;
+    playerSkills.discoveredEightGates   = false;
+    playerSkills.discoveredHealGates    = false;
+    playerSkills.cooldownStagger        = 4;
+    playerSkills.cooldownDisarm         = 4;
+    playerSkills.cooldownGates          = 2;
+    playerSkills.hasActiveGate          = false;
+    playerSkills.hasHealGate            = false;
+}
+//Function for checking EXP for learning Skills
+void EXPtoSkills(){
+    if (playerStats.keiEXP >= 2 && !playerSkills.discoveredStagger){
+        playerSkills.discoveredStagger      = true;
+        cout << "Kei discovered Stagger!" << endl;
+    }
+    if (playerStats.keiEXP >= 4 && !playerSkills.discoveredDisarm){
+        playerSkills.discoveredDisarm       = true;
+        cout << "Kei discovered Disarm!" << endl;
+    }
+    if (playerStats.keiEXP >= 6 && !playerSkills.discoveredEightGates){
+        playerSkills.discoveredEightGates   = true;
+        cout << "Kei discovered the Eight Gates!" << endl;
+    }
+    if (playerStats.keiEXP >= 10 && !playerSkills.discoveredHealGates){
+        playerSkills.discoveredHealGates    = true;
+        cout << "Kei discovered the Heal Gates!" << endl;
+    }
+}
+
+//Set variables for buffs/debuffs
+struct Debuffs{
+    float multiplierCrashout;
+    bool hasCrashedOut;         //aka Gate End Debuff
+    bool bossStunned;
+};
+struct Buffs{
+    bool masteryEightGates;
+};
+//Create usable variables from Debuffs
+Debuffs debuff;
+void initializedebuffs(){
+    debuff.multiplierCrashout   = 1.5;
+    debuff.hasCrashedOut        = false;
+    debuff.bossStunned          = false;
+}
+//Create usable variables from Buffs
+Buffs buff;
+void initializebuffs(){
+    buff.masteryEightGates      = false;
+}
+//Function for checking EXP for getting Buffs
+void EXPtoBuffs(){
+    if (playerStats.keiEXP >= 8 && !buff.masteryEightGates){
+        buff.masteryEightGates      = true;
+        debuff.multiplierCrashout   = debuff.multiplierCrashout - 0.1;
+        cout << "Kei has mastered the Eight Gates!" << endl;
+    }
+}
+
+//Set variables for training bonuses
+struct Bonus{
+    float bonusmaxHP;
+    float bonusATK;
+    float bonusEND;
+    float bonusmaxEP;
+    float bonusEPregen;
+};
+//Create usable variables from Bonus
+Bonus training;
+void initializetrainingbonuses(){
+    training.bonusmaxHP     = 0;
+    training.bonusATK       = 0;
+    training.bonusEND       = 0;
+    training.bonusmaxEP     = 0;
+    training.bonusEPregen   = 0;
+}
+
+//PLayer inputs
+struct Input{
+    int input;
+};
+Input player;
+
+//Iterations
+struct Iterations{
+    int i;
+    int j;
+    bool turnSkip;
+};
+Iterations iter;
+void initializeiterations(){
+    iter.i = 1;
+    iter.j = 1;
+    iter.turnSkip = false;
+}
+
+//Function for EXP cap
+void EXPcap(){
+    if (playerStats.keiEXP >= 11){
+        cout << "There is nothing else to discover..." << endl;
+        playerStats.keiHasmaxEXP = true;
+        iter.i--;
+    }
+}
+
+//Set variables for HP checking during battle
+struct HitPointCheck{
+    bool playerHasDied;
+    bool arHasDied;
+};
+HitPointCheck check;
+void HPcheck(){
+    if (playerStats.keiHP <= 0){
+        check.playerHasDied = true;
+    } else {
+        check.playerHasDied = false;
+    }
+    if (bossStats.arHP <= 0){
+        check.arHasDied     = true;
+    } else {
+        check.arHasDied     = false;
+    }
+}
+
+void cooldownTick(){
+    if (iter.turnSkip == false){
+        if (playerSkills.cooldownStagger > 0){
+            playerSkills.cooldownStagger-= 1;
+        }
+        if (playerSkills.cooldownDisarm > 0){
+            playerSkills.cooldownDisarm-= 1;
+        }
+        if (playerSkills.cooldownGates > 0){
+            playerSkills.cooldownGates-= 1;
+        }
+    }
+}
+
+//This is so fucking bad lmao
+void checkGates(){
+    if (!playerSkills.discoveredEightGates){
+        cout << "Skill locked."<< endl;
+        iter.turnSkip = true;
+    }
+    if (playerSkills.discoveredEightGates){
+        if (!playerSkills.discoveredHealGates){
+            if (!playerSkills.hasActiveGate){
+                if (!debuff.hasCrashedOut && playerStats.keiEP >= 35){
+                    playerSkills.hasActiveGate = true;
+                    playerStats.keiEP-= 35;
+                } else if (debuff.hasCrashedOut && playerStats.keiEP >= 52.5){
+                    playerSkills.hasActiveGate = true;
+                    playerStats.keiEP-= 52.5;
+                } else {
+                    cout << "Out of EP!" << endl;
+                    iter.turnSkip = true;
+                }
+            } else if (playerSkills.hasActiveGate){
+                cout << "Skill already active!" << endl;
+                iter.turnSkip = true;
+            }
+            
+        if (playerSkills.discoveredHealGates){
+            if (!playerSkills.hasActiveGate){
+                if (!debuff.hasCrashedOut && playerStats.keiEP >= 35){
+                    playerSkills.hasActiveGate = true;
+                    playerStats.keiEP-= 35;
+                } else if (debuff.hasCrashedOut && playerStats.keiEP >= 52.5){
+                    playerSkills.hasActiveGate = true;
+                    playerStats.keiEP-= 52.5;
+                } else {
+                    cout << "Out of EP!" << endl;
+                    iter.turnSkip = true;
+                }
+            } else if (playerSkills.hasActiveGate){
+                if (!playerSkills.hasHealGate){
+                    if (!debuff.hasCrashedOut && playerStats.keiEP >= 45){
+                        playerSkills.hasActiveGate = true;
+                        playerStats.keiEP-= 45;
+                    } else if (debuff.hasCrashedOut && playerStats.keiEP >= 67.5){
+                        playerSkills.hasActiveGate = true;
+                        playerStats.keiEP-= 67.5;
+                    } else {
+                        cout << "Out of EP!" << endl;
+                        iter.turnSkip = true;
+                    }
+                }
+            } else if (playerSkills.hasHealGate){
+                    cout << "Skill already active!" << endl;
+                    iter.turnSkip = true;
+                }
+            }
+        }
+    }
+}
+
+void buffGates(){
+    if (playerSkills.hasActiveGate){
+        playerStats.keiATK*= 1.8;
+    }
+}
+
+//Save (I really need this save file. The training arc takes too long...)
+void saveGame() {
+    ofstream saveFile("save.txt");
+    if (saveFile.is_open()) {
+        saveFile << playerStats.keimaxHP << endl;
+        saveFile << playerStats.keiATK << endl;
+        saveFile << playerStats.keiEND << endl;
+        saveFile << playerStats.keimaxEP << endl;
+        saveFile << playerStats.keiEPregen << endl;
+        saveFile << playerStats.keiEXP << endl;
+        
+        saveFile << playerSkills.discoveredStagger << endl;
+        saveFile << playerSkills.discoveredDisarm << endl;
+        saveFile << playerSkills.discoveredEightGates << endl;
+        saveFile << playerSkills.discoveredHealGates << endl;
+        
+        saveFile << training.bonusmaxHP << endl;
+        saveFile << training.bonusATK << endl;
+        saveFile << training.bonusEND << endl;
+        saveFile << training.bonusmaxEP << endl;
+        saveFile << training.bonusEPregen << endl;
+        saveFile << iter.i << endl;
+        saveFile.close();
+        cout << "Game Saved." << endl;
+    } else {
+        cout << "Error. Game not saved." << endl;
+    }
+}
+//Load
+void loadGame() {
+    ifstream loadFile("save.txt");
+    if (loadFile.is_open()) {
+        loadFile >> playerStats.keimaxHP;
+        loadFile >> playerStats.keiATK;
+        loadFile >> playerStats.keiEND;
+        loadFile >> playerStats.keimaxEP;
+        loadFile >> playerStats.keiEPregen;
+        loadFile >> playerStats.keiEXP;
+        
+        loadFile >> playerSkills.discoveredStagger;
+        loadFile >> playerSkills.discoveredDisarm;
+        loadFile >> playerSkills.discoveredEightGates;
+        loadFile >> playerSkills.discoveredHealGates;
+        
+        loadFile >> training.bonusmaxHP;
+        loadFile >> training.bonusATK;
+        loadFile >> training.bonusEND;
+        loadFile >> training.bonusmaxEP;
+        loadFile >> training.bonusEPregen;
+        loadFile >> iter.i;
+        if (loadFile.fail()) {
+            cout << "Error. Game save not loaded. (Incomplete or corrupted file)" << endl;
+            loadFile.close();
+            return;
+        }
+        loadFile.close();
+        cout << "Loaded save." << endl;
+    } else {
+        cout << "Error. Game save not loaded. (Missing file)" << endl;
+    }
+}
+//Dev note: Save and load will remove later (or probably never, if I forget this comment)
+
+//Main
+int main(){
+    //Include initialized variables from void functions
+    initializeplayerstats();
+    initializebossstats();
+    initializeplayerskills();
+    initializedebuffs();
+    initializebuffs();
+    initializetrainingbonuses();
+    initializeiterations();
+    //Menu
+    cout << "'Reborn' in East Blue with the Eight" << endl;
+	cout << "No copyright intended." << endl;
+	cout << "This was made as a project for CSDC101." << endl;
+	cout << "" << endl;
+	cout << "[1] New Game" << endl;
+	cout << "[2] Quit" << endl;
+	cout << "[3] Load" << endl; //Remove on final product
+	
+	cin >> player.input;
+	
+	switch (player.input){
+	        case 1:
+	            cout << "" << endl;
+	        break;
+	        case 2:
+	            return 0;
+	        break;
+	        //Remove on final product
+	        case 3:
+	            loadGame();
+	        break;
+	        default:
+	            cout << "Enter an indicated number to select an option." << endl;
+	            cin.clear();            //Dev note: Error handle, clears the last input
+	            cin.ignore(1000, '\n'); //Dev note: Ignore last input/s
+	        break;
+    }
+    
+    //Main story(to be put here)
+    
+    //Training turns
+	for (iter.i; iter.i <= 48; iter.i++){
+	    cout << "Turn " << iter.i << " || " << 48 - iter.i << " turns remaining" << endl;
+	    cout << "[1] Train HP." << " [Bonus: " << training.bonusmaxHP << "]" << endl;
+	    cout << "[2] Train ATK." << " [Bonus: " << training.bonusATK << "]" << endl;
+	    cout << "[3] Train END." << " [Bonus: " << training.bonusEND << "]" << endl;
+	    cout << "[4] Train EP." << " [Bonus: " << training.bonusmaxEP << "]" << endl;
+	    cout << "[5] Train EP Regen." << " [Bonus: " << training.bonusEPregen << "]" << endl;
+	    if (!playerStats.keiHasmaxEXP){
+	        cout << "[6] Self-Discovery [Gain EXP]" << endl;
+	    } else if (playerStats.keiHasmaxEXP == true){
+	        cout << "[6] Self-Discovery [---- ---]" << endl;
+	    }
+	    cout << "[7] Check stats." << endl;
+	    cout << "[8] Quit game." << endl;
+	    cout << "[9] Save game." << endl;
+	    
+	    cin >> player.input;
+	    
+	    switch (player.input){
+	        case 1:
+	            training.bonusmaxHP++;
+	            playerStats.keimaxHP = playerStats.keimaxHP + 21 + (4 * (training.bonusmaxHP - 1));
+	            cout << "HP increased to " << playerStats.keimaxHP << endl;
+	        break;
+	        case 2:
+	            training.bonusATK++;
+	            playerStats.keiATK = playerStats.keiATK + 21 + (4 * (training.bonusATK - 1));
+	            cout << "ATK increased to " << playerStats.keiATK << endl;
+	        break;
+	        case 3:
+	        	training.bonusEND++;
+	            playerStats.keiEND = playerStats.keiEND + 21 + (4 * (training.bonusEND - 1));
+	            cout << "END increased to " << playerStats.keiEND << endl;
+	        break;
+	        case 4:
+	            training.bonusmaxEP++;
+	            playerStats.keimaxEP = playerStats.keimaxEP + 21 + (4 * (training.bonusmaxEP - 1));
+	            cout << "EP increased to " << playerStats.keimaxEP << endl;
+	        break;
+	        case 5:
+	            training.bonusEPregen++;
+	            playerStats.keiEPregen = playerStats.keiEPregen + 21 + (4 * (training.bonusEPregen - 1));
+	            cout << "EP regen increased to " << playerStats.keiEPregen << endl;
+	        break;
+	        case 6:
+	            playerStats.keiEXP++;
+	            EXPtoSkills();
+	            EXPtoBuffs();
+	            EXPcap();
+	        break;
+	        case 7:
+	            cout << "HP: " << playerStats.keimaxHP << endl;
+	            cout << "ATK: " << playerStats.keiATK << endl;
+	            cout << "END: " << playerStats.keiEND << endl;
+	            cout << "EP: " << playerStats.keiEP << endl;
+	            cout << "EP Regen: " << playerStats.keiEPregen << endl;
+	            iter.i--;
+	        break;
+	        case 8:
+	            return 0;
+	        break;
+	        //Remove on final product
+	        case 9:
+	            saveGame();
+	            iter.i--;
+	        break;
+	        //Remove on final product(important)
+	        case 0: 
+	            iter.i += 44;
+	            playerStats.keimaxHP        = 5000;
+                playerStats.keiHP           = 5000;
+                playerStats.keiATK          = 500;
+                playerStats.keiEND          = 150;
+                playerStats.keimaxEP        = 50;
+                playerStats.keiEP           = 50;
+                playerStats.keiEPregen      = 50;
+                playerStats.keiEXP          = 10;
+                playerStats.keiHasmaxEXP    = true;
+                EXPtoSkills();
+	            EXPtoBuffs();
+	            EXPcap();
+	        break;
+	        default:
+	            cout << "Enter an indicated number to select an option." << endl;
+	            cin.clear();            
+	            cin.ignore(1000, '\n'); 
+	            iter.i--;
+	        break;
+	    }
+	}
+	
+	//Boss fight
+	//Initialize HP and EP to max
+	playerStats.keiHP = playerStats.keimaxHP;
+	playerStats.keiEP = playerStats.keimaxEP;
+	bossStats.arHP = bossStats.armaxHP;
+	
+	//Battle turns(incomplete)
+	for (iter.j; iter.j <= 48; iter.j++){
+	    //Before going to the next turn...
+	    HPcheck();
+	    if (check.playerHasDied == true || check.arHasDied == true){
+	        iter.j += 50;
+	        continue;
+	    }
+	    
+	    cout << "Turn " << iter.j << " || " << 48 - iter.j << " turns remaining" << endl;
+	    
+	    //This section (from here) is for HP
+        cout << playerStats.keiHP << endl;
+        cout << bossStats.arHP << endl;
+	    //This section (to here) is for HP
+	    
+	    cout << "[1] Attack" << endl;
+	    
+	    if (!playerSkills.discoveredStagger) {
+            cout << "[2] -------" << endl;
+        } else if (playerSkills.cooldownStagger > 0) {
+            cout << "[2] Stagger (" << playerSkills.cooldownStagger << ")" << endl;
+        } else {
+            cout << "[2] Stagger" << endl;
+        }  
+	    
+	    if (!playerSkills.discoveredDisarm) {
+            cout << "[3] ------" << endl;
+        } else if (playerSkills.cooldownDisarm > 0) {
+            cout << "[3] Disarm (" << playerSkills.cooldownDisarm << ")" << endl;
+        } else {
+            cout << "[3] Disarm" << endl;
+        }
+	    
+	    if (!playerSkills.discoveredEightGates && !playerSkills.hasActiveGate){
+	        cout << "[4] ----- -----" << endl;
+	    } 
+	    if (playerSkills.discoveredEightGates && !playerSkills.hasActiveGate){
+	        cout << "[4] Eight Gates" << endl;
+	    }
+	    if (playerSkills.discoveredEightGates && playerSkills.hasActiveGate){
+	        if (!playerSkills.discoveredHealGates && !playerSkills.hasHealGate){
+	            cout << "[4] |ACTIVE (G1)|" << endl;
+	        }
+	        if (playerSkills.discoveredHealGates && !playerSkills.hasHealGate){
+	            cout << "[4] Heal Gates |ACTIVE (G1)|" << endl;
+	        }
+	        if (playerSkills.discoveredHealGates && playerSkills.hasHealGate){
+	            cout << "[4] |ACTIVE (G2)|" << endl;
+	        }
+	    }
+	        
+        
+        cin >> player.input;
+        
+        switch(player.input){
+            case 1:
+                bossStats.arHP = bossStats.arHP - playerStats.keiATK;
+            break;
+            case 2:
+                if (!playerSkills.discoveredStagger) {
+                    cout << "Skill locked." << endl;
+                    iter.turnSkip = true;
+                } else if (playerSkills.cooldownStagger > 0) {
+                    cout << "On cooldown." << endl;
+                    iter.turnSkip = true;
+                } else {
+                    bossStats.arHP = bossStats.arHP - playerStats.keiATK;
+                    playerStats.keiEP-= 5;
+                    debuff.bossStunned = true;
+                    playerSkills.cooldownStagger+= 4;
+                }
+            break;
+            case 3:
+                if (!playerSkills.discoveredDisarm) {
+                    cout << "Skill locked." << endl;
+                    iter.turnSkip = true;
+                } else if (playerSkills.cooldownDisarm > 0) {
+                    cout << "On cooldown." << endl;
+                    iter.turnSkip = true;
+                } else {
+                    bossStats.arHP = bossStats.arHP - playerStats.keiATK;
+                    playerStats.keiEP-= 5;
+                    debuff.bossStunned = true;
+                    playerSkills.cooldownDisarm+= 4;
+                }
+            break;
+            case 4:
+	            
+            break;
+            default:
+                bossStats.arHP = bossStats.arHP - playerStats.keiATK;
+            break;
+        }
+        
+        if (debuff.bossStunned == true){
+            debuff.bossStunned = false;
+            continue;
+        }
+            
+        if (iter.turnSkip == true){
+            iter.j--;
+            iter.turnSkip = false;
+            continue;
+        }
+        
+        cooldownTick();
+	}
+    return 0;
+}

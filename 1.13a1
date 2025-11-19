@@ -1,0 +1,144 @@
+#include <iostream>
+#include <string>
+#include <fstream>
+#include <iomanip>
+using namespace std;
+
+///S T A T S * * * * * * * * * * * * * * * * * * * * * * * * * * * *///
+
+//Set variables for statistics
+struct Stats{
+    //player
+    float keimaxHP;
+    float keiHP;
+    float keiATK;
+    float keiEND;
+    float keimaxEP;
+    float keiEP;
+    float keiEPregen;
+    float keiEXP;
+    bool keiHasmaxEXP;
+    //boss
+    float armaxHP;
+    float arHP;
+    float arATK;
+    float arEND;
+};
+    //Create usable variables from Stats
+    Stats playerStats, bossStats;      
+        //player
+        void player_stats(){                    
+            playerStats.keimaxHP        = 50;
+            playerStats.keiHP           = 50;
+            playerStats.keiATK          = 10;
+            playerStats.keiEND          = 15;
+            playerStats.keimaxEP        = 5;
+            playerStats.keiEP           = 5;
+            playerStats.keiEPregen      = 0;
+            playerStats.keiEXP          = 0;
+            playerStats.keiHasmaxEXP    = false;
+        }
+        //boss
+        void boss_stats(){
+            bossStats.armaxHP       = 2500;
+            bossStats.arHP          = 2500;
+            bossStats.arATK         = 520;
+            bossStats.arEND         = 600;
+        }
+        
+///S K I L L S * * * * * * * * * * * * * * * * * * * * * * * * * * * *///
+
+//Set variables for discovering skills
+struct discovered_Skills{
+    //player
+    bool discoveredStagger;
+    bool discoveredDisarm;
+    bool discoveredEightGates;
+    bool discoveredHealGates;
+};
+    //Create and initialize usable variables from discovered_Skills
+    discovered_Skills playerSkill;
+        //player
+        void discovered_player_skills(){
+            playerSkill.discoveredStagger      = false;
+            playerSkill.discoveredDisarm       = false;
+            playerSkill.discoveredEightGates   = false;
+            playerSkill.discoveredHealGates    = false;
+        }
+        
+//Set variables for player skill cooldown
+struct cooldown_Skills{
+    //player
+    int count_forStagger;
+    int count_forDisarm;
+    int count_forGates;
+};
+    //Create and initialize usable variables from cooldown_Skills
+    cooldown_Skills playerSkillCooldown;
+        void cooldown_player_skills(){
+            playerSkillCooldown.count_forStagger        = 4;
+            playerSkillCooldown.count_forDisarm         = 4;
+            playerSkillCooldown.count_forGates          = 2;
+        }
+        
+//Set variables for checking gates
+struct checking_Gates{
+    bool ActiveEightGate;
+    bool ActiveHealGate;
+};
+    //Create and initialize usable variables from checking_Gates
+    checking_Gates check_if;
+        void check_player_gates(){
+            check_if.ActiveEightGate          = false;
+            check_if.ActiveHealGate           = false;
+}
+
+///T R A I N I N G * * * * * * * * * * * * * * * * * * * * * * * * *///
+
+//Set variables for stat training bonuses
+struct stat_training_Bonuses{
+    float bonusmaxHP;
+    float bonusATK;
+    float bonusEND;
+    float bonusmaxEP;
+    float bonusEPregen;
+};
+    //Create usable variables from Bonus
+    stat_training_bonuses statTrainBonus;
+        void statTrainingBonuses(){
+            statTrainBonus.bonusmaxHP     = 0;
+            statTrainBonus.bonusATK       = 0;
+            statTrainBonus.bonusEND       = 0;
+            statTrainBonus.bonusmaxEP     = 0;
+            statTrainBonus.bonusEPregen   = 0;
+        }
+        
+//Set variables for player buffs
+struct player_Buffs{
+    bool masteredEightGates;
+};
+    //Create usable variables from Buffs
+    player_Buffs playerBuff;
+    void initializePlayerBuffs(){
+        playerBuff.masteredEightGates     = false;
+    }
+//Set variables for player debuffs
+struct player_Debuffs{
+    float multiplierCrashout;
+    bool hasCrashedOut;                 //aka Gate End Debuff
+};
+    //Create usable variables from Debuffs
+    player_Debuffs playerDebuff;
+        void initializePlayerDebuffs(){
+            playerDebuff.multiplierCrashout   = 1.5;
+            playerDebuff.hasCrashedOut        = false;
+        }
+    
+    //Function for EXP to Buffs
+        void EXPtoBuffs(){
+            if (playerStats.keiEXP >= 8 && !buff.masteryEightGates){
+                buff.masteryEightGates = true;
+                debuff.multiplierCrashout-= 0.1;
+                cout << "Kei has mastered the Eight Gates!" << endl;
+            }
+        }

@@ -1,0 +1,369 @@
+/* * * * * * * * * * * * * * * * * * * * * * * * * *
+    Naming format as follows:
+        struct camelCase
+        void lower_case
+        
+    Naming format for declaring useable variables:
+        camelCase camel_Case
+        
+    Variables will have different formats, but names should be
+    self-explanatory.
+* * * * * * * * * * * * * * * * * * * * * * * * * */
+
+
+#include <iostream>
+#include <string>
+#include <fstream>
+#include <iomanip>
+using namespace std;
+
+///S T A T S * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *///
+
+//Set variables for statistics
+struct Stats{
+    //player
+    float keimaxHP;
+    float keiHP;
+    float keiATK;
+    float keiEND;
+    float keimaxEP;
+    float keiEP;
+    float keiEPregen;
+    float keiEXP;
+    bool keiHasmaxEXP;
+    //boss
+    float armaxHP;
+    float arHP;
+    float arATK;
+    float arEND;
+};
+    //Create usable variables from Stats
+    Stats player_Stats, boss_Stats;      
+        //player
+        void initialize_player_stats(){                    
+            player_Stats.keimaxHP        = 50;
+            player_Stats.keiHP           = 50;
+            player_Stats.keiATK          = 10;
+            player_Stats.keiEND          = 15;
+            player_Stats.keimaxEP        = 5;
+            player_Stats.keiEP           = 5;
+            player_Stats.keiEPregen      = 0;
+            player_Stats.keiEXP          = 0;
+            player_Stats.keiHasmaxEXP    = false;
+        }
+        //boss
+        void initialize_boss_stats(){
+            boss_Stats.armaxHP       = 2500;
+            boss_Stats.arHP          = 2500;
+            boss_Stats.arATK         = 520;
+            boss_Stats.arEND         = 600;
+        }
+        
+///S K I L L S * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *///
+
+//Set variables for discovering skills
+struct discoveredSkills{
+    //player
+    bool discoveredStagger;
+    bool discoveredDisarm;
+    bool discoveredEightGates;
+    bool discoveredHealGates;
+};
+    //Create and initialize usable variables from discovered_Skills
+    discoveredSkills player_Skill;
+        //player
+        void initialize_discovered_player_skills(){
+            player_Skill.discoveredStagger      = false;
+            player_Skill.discoveredDisarm       = false;
+            player_Skill.discoveredEightGates   = false;
+            player_Skill.discoveredHealGates    = false;
+        }
+        
+//Set variables for player skill cooldown
+struct cooldownSkills{
+    //player
+    int count_forStagger;
+    int count_forDisarm;
+    int count_forGates;
+};
+    //Create and initialize usable variables from cooldown_Skills
+    cooldownSkills player_skill_Cooldown;
+        void initialize_player_skill_cooldown_func(){
+            player_skill_Cooldown.count_forStagger        = 4;
+            player_skill_Cooldown.count_forDisarm         = 4;
+            player_skill_Cooldown.count_forGates          = 2;
+        }
+        
+//Set variables for checking gates
+struct checkGates{
+    bool ActiveEightGate;
+    bool ActiveHealGate;
+};
+    //Create and initialize usable variables from checking_Gates
+    //Note that it is linked to battle functions
+    checkGates check_Gate;
+        void initialize_check_player_gates_func(){
+            check_Gate.ActiveEightGate          = false;
+            check_Gate.ActiveHealGate           = false;
+}
+
+///T R A I N I N G * * * * * * * * * * * * * * * * * * * * * * * * * * * * *///
+
+//Set variables for stat training bonuses
+struct trainingBonuses{
+    float bonusmaxHP;
+    float bonusATK;
+    float bonusEND;
+    float bonusmaxEP;
+    float bonusEPregen;
+};
+    //Create usable variables from Bonus
+    trainingBonuses training_Bonus;
+        void initialize_stat_training_bonus(){
+            training_Bonus.bonusmaxHP     = 0;
+            training_Bonus.bonusATK       = 0;
+            training_Bonus.bonusEND       = 0;
+            training_Bonus.bonusmaxEP     = 0;
+            training_Bonus.bonusEPregen   = 0;
+        }
+        
+//Set variables for player buffs
+struct playerBuffs{
+    bool masteredEightGates;
+};
+    //Create usable variables from Buffs
+    playerBuffs player_Buffs;
+    void initialize_player_buff_check(){
+        player_Buffs.masteredEightGates     = false;
+    }
+//Set variables for player debuffs
+struct playerDebuffs{
+    float multiplierCrashout;
+    bool hasCrashedOut;                 //aka Gate End Debuff
+};
+    //Create usable variables from Debuffs
+    playerDebuffs player_Debuffs;
+        void initialize_player_debuff_check(){
+            player_Debuffs.multiplierCrashout   = 1.5;
+            player_Debuffs.hasCrashedOut        = false;
+        }
+
+///I N P U T & I T E R A T I O N S * * * * * * * * * * * * * * * * * * * * *///
+
+//PLayer inputs
+struct Input{
+    int input;
+};
+    Input player;
+    
+//Iterations
+struct Iterations{
+    int i;
+    int j;
+    bool battleTurnSkip;
+};
+    Iterations iter;
+        void initializeiterations(){
+            iter.i = 1; // Training turns
+            iter.j = 1; // Battle turns
+            iter.battleTurnSkip = false;
+        }
+        
+///E X P F U N C T I O N S * * * * * * * * * * * * * * * * * * * * * * * * *///
+
+    //Function for EXP to Buffs
+        void exp_to_buffs_func(){
+            if (player_Stats.keiEXP >= 8 && !player_Buffs.masteredEightGates){
+                player_Buffs.masteredEightGates = true;
+                player_Debuffs.multiplierCrashout-= 0.1;
+                cout << "Kei has mastered the Eight Gates!" << endl;
+            }
+        }
+        
+    //Function for EXP cap
+        void exp_cap_func(){
+            if (player_Stats.keiEXP >= 10){
+                cout << "There is nothing else to discover..." << endl;
+                player_Stats.keiHasmaxEXP = true;
+                iter.i--;
+            }
+        }
+        
+///S A V E & L O A D ( T R A I N I N G ) * * * * * * * * * * * * * * * * * *///
+//Dev note: This section saves and loads ONLY for training turns
+
+    //Save
+        void saveGame() {
+        ofstream saveFile("save.txt");
+            if (saveFile.is_open()) {
+                //Player Stats
+                saveFile << player_Stats.keimaxHP << endl;
+                saveFile << player_Stats.keiATK << endl;
+                saveFile << player_Stats.keiEND << endl;
+                saveFile << player_Stats.keimaxEP << endl;
+                saveFile << player_Stats.keiEPregen << endl;
+                saveFile << player_Stats.keiEXP << endl;
+                //Discovered Skills
+                saveFile << player_Skill.discoveredStagger << endl;
+                saveFile << player_Skill.discoveredDisarm << endl;
+                saveFile << player_Skill.discoveredEightGates << endl;
+                saveFile << player_Skill.discoveredHealGates << endl;
+                //Training Bonuses
+                saveFile << training_Bonus.bonusmaxHP << endl;
+                saveFile << training_Bonus.bonusATK << endl;
+                saveFile << training_Bonus.bonusEND << endl;
+                saveFile << training_Bonus.bonusmaxEP << endl;
+                saveFile << training_Bonus.bonusEPregen << endl;
+                //Iterations
+                saveFile << iter.i << endl;
+
+                saveFile.close();
+                cout << "Game Saved." << endl;
+
+            } else {
+                cout << "Error. Game not saved." << endl;
+            }
+        }
+        void loadGame() {
+        ifstream loadFile("save.txt");
+            if (loadFile.is_open()) {
+                // Player Stats
+                loadFile >> player_Stats.keimaxHP;
+                loadFile >> player_Stats.keiATK;
+                loadFile >> player_Stats.keiEND;
+                loadFile >> player_Stats.keimaxEP;
+                loadFile >> player_Stats.keiEPregen;
+                loadFile >> player_Stats.keiEXP;
+                // Discovered Skills
+                loadFile >> player_Skill.discoveredStagger;
+                loadFile >> player_Skill.discoveredDisarm;
+                loadFile >> player_Skill.discoveredEightGates;
+                loadFile >> player_Skill.discoveredHealGates;
+                // Training Bonuses
+                loadFile >> training_Bonus.bonusmaxHP;
+                loadFile >> training_Bonus.bonusATK;
+                loadFile >> training_Bonus.bonusEND;
+                loadFile >> training_Bonus.bonusmaxEP;
+                loadFile >> training_Bonus.bonusEPregen;
+                // Iterations
+                loadFile >> iter.i;
+
+                if (loadFile.fail()) {
+                    cout << "Error. Game save not loaded. (Incomplete or corrupted file)" << endl;
+                    loadFile.close();
+                    return;
+                }
+
+                loadFile.close();
+                cout << "Loaded save." << endl;
+
+            } else {
+                cout << "Error. Game save not loaded. (Missing file)" << endl;
+            }
+        }
+//Dev note: Save and load will remove later (or probably never, if I forget this comment)
+
+///B A T T L E F U N C T I O N S * * * * * * * * * * * * * * * * * * * * * *///
+
+//Set variables for death checking during battle
+struct deathCheck{
+    bool playerHasDied;
+    bool arHasDied;
+};
+    deathCheck death_Check;
+        //Important: Checks if player has died first before Arlong.
+        void death_check_func(){
+            if (player_Stats.keiHP <= 0){
+                death_Check.playerHasDied = true;
+            } else {
+                death_Check.playerHasDied = false;
+            }
+            if (boss_Stats.arHP <= 0){
+                death_Check.arHasDied     = true;
+            } else {
+                death_Check.arHasDied     = false;
+            }
+        }
+        
+        void battle_check_player_gates_func(){
+            if (check_Gate.ActiveEightGate){
+                player_Stats.keiATK*= 1.8;
+            }
+            //To be fixed later:
+            if (check_Gate.ActiveHealGate){
+                player_Stats.keiHP = player_Stats.keiHP + (player_Stats.keiHP * 0.1);
+            }
+        }
+        
+///M A I N * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *///
+
+int main(){
+    // Stats //
+    initialize_player_stats();
+    initialize_boss_stats();
+    // Skills //
+    initialize_discovered_player_skills();
+    initialize_player_skill_cooldown_func();
+    // Gates //
+    initialize_check_player_gates_func();
+    // Training //
+    initialize_stat_training_bonus();
+    // Buffs & Debuffs //
+    initialize_player_buff_check();
+    initialize_player_debuff_check();
+    // Iterations //
+    initializeiterations();
+    
+    // * * MENU * * //
+    cout << "'Reborn' in East Blue with the Eight" << endl;
+	cout << "No copyright intended." << endl;
+	cout << "This was made as a project for CSDC101." << endl;
+	cout << endl;
+	cout << "[1] New Game" << endl;
+	cout << "[2] Quit" << endl;
+	cout << "[3] Load" << endl;
+	
+	cin >> player.input;
+    
+    switch (player.input){
+	        case 1:
+	            cout << endl;
+	        break;
+	        case 2:
+	            return 0;
+	        break;
+	        case 3:
+	            loadGame();
+	        break;
+	        default:
+	            cout << "Enter an indicated number to select an option." << endl;
+	            cin.clear();            //Dev note: Error handle, clears the last input
+	            cin.ignore(1000, '\n'); //Dev note: Ignore last input/s
+	        break;
+    }
+    
+    // * * STORY * * //
+    //To be put here.
+
+    // * * TRAINING * * //
+    for (iter.i; iter.i <= 48; iter.i++){
+	    cout << "Turn " << iter.i << " || " << 48 - iter.i << " turns remaining" << endl;
+	    
+	    cout << "[1] Train HP." << " [Bonus: " << training_Bonus.bonusmaxHP << "]" << endl;
+	    cout << "[2] Train ATK." << " [Bonus: " << training_Bonus.bonusATK << "]" << endl;
+	    cout << "[3] Train END." << " [Bonus: " << training_Bonus.bonusEND << "]" << endl;
+	    cout << "[4] Train EP." << " [Bonus: " << training_Bonus.bonusmaxEP << "]" << endl;
+	    cout << "[5] Train EP Regen." << " [Bonus: " << training_Bonus.bonusEPregen << "]" << endl;
+	    if (!player_Stats.keiHasmaxEXP){
+	        cout << "[6] Self-Discovery [Gain EXP]" << endl;
+	    } else if (player_Stats.keiHasmaxEXP == true){
+	        cout << "[6] Self-Discovery [---- ---]" << endl;
+	    }
+	    cout << "[7] Check stats." << endl;
+	    cout << "[8] Quit game." << endl;
+	    cout << "[9] Save game." << endl;
+	    
+	    cin >> player.input;
+    }
+    return 0;
+}

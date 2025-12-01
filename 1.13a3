@@ -173,10 +173,30 @@ struct Iterations{
 
     //Function for EXP to Buffs
         void exp_to_buffs_func(){
-            if (player_Stats.keiEXP >= 8 && !player_Buffs.masteredEightGates){
+            if (player_Stats.keiEXP >= 8){
                 player_Buffs.masteredEightGates = true;
                 player_Debuffs.multiplierCrashout-= 0.1;
                 cout << "Kei has mastered the Eight Gates!" << endl;
+            }
+        }
+        
+    //Function for EXP to Skills
+        void exp_to_skills_func(){
+            if (player_Stats.keiEXP >= 2){
+                player_Skill.discoveredStagger = true;
+                cout << "Kei discovered Stagger!" << endl;
+            }
+            if (player_Stats.keiEXP >= 4){
+                player_Skill.discoveredDisarm = true;
+                cout << "Kei discovered Disarm!" << endl;
+            }
+            if (player_Stats.keiEXP >= 6){
+                player_Skill.discoveredEightGates = true;
+                cout << "Kei discovered the Eight Gates!" << endl;
+            }
+            if (player_Stats.keiEXP >= 10){
+                player_Skill.discoveredHealGates = true;
+                cout << "Kei discovered the Heal Gates!" << endl;
             }
         }
         
@@ -334,23 +354,26 @@ int main(){
 	cout << "[3] Load" << endl;
 	
 	cin >> player.input;
-    
-    switch (player.input){
-	        case 1:
-	            cout << endl;
-	        break;
-	        case 2:
-	            return 0;
-	        break;
-	        case 3:
-	            loadGame();
-	        break;
-	        default:
-	            cout << "Enter an indicated number to select an option." << endl;
-	            cin.clear();            //Dev note: Error handle, clears the last input
-	            cin.ignore(1000, '\n'); //Dev note: Ignore last input/s
-	        break;
-    }
+
+    while (player.input < 1 || player.input > 3) {
+        cout << "Enter an indicated number to select an option." << endl;
+
+        cin.clear();            //Error handle, clears the last input
+        cin.ignore(1000, '\n'); //Ignore last input/s
+
+        cin >> player.input;
+        }
+
+    switch (player.input) {
+        case 1:
+            cout << endl;
+            break;
+        case 2:
+            return 0;
+        case 3:
+            loadGame();
+            break;
+        }
     
     // * * STORY * * //
     //To be put here.
@@ -365,7 +388,7 @@ int main(){
 	    cout << "[4] Train EP." << " [Bonus: " << training_Bonus.bonusmaxEP << "]" << endl;
 	    cout << "[5] Train EP Regen." << " [Bonus: " << training_Bonus.bonusEPregen << "]" << endl;
 	    if (!player_Stats.keiHasmaxEXP){
-	        cout << "[6] Self-Discovery [Gain EXP]" << endl;
+	        cout << "[6] Self-Discovery [Gain EXP] || " << player_Stats.keiEXP << endl;
 	    } else if (player_Stats.keiHasmaxEXP == true){
 	        cout << "[6] Self-Discovery [---- ---]" << endl;
 	    }
@@ -403,7 +426,8 @@ int main(){
 	        break;
 	        case 6:
 	            player_Stats.keiEXP++;
-	            exp_to_buffs_func();
+	            exp_to_skills_func();
+                exp_to_buffs_func();
 	            exp_cap_func();
 	        break;
 	        case 7:
@@ -433,6 +457,7 @@ int main(){
                 player_Stats.keiEPregen      = 50;
                 player_Stats.keiEXP          = 10;
                 player_Stats.keiHasmaxEXP    = true;
+                exp_to_skills_func();
                 exp_to_buffs_func();
 	            exp_cap_func();
 	        break;
@@ -443,6 +468,8 @@ int main(){
 	            iter.i--;
 	        break;
         }
+        
+        
     }
     
     // * * BATTLE * * //
@@ -478,4 +505,6 @@ int main(){
 	    
 
     return 0;
+    }
+    
 }

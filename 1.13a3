@@ -502,6 +502,28 @@ int main(){
         } else {
             cout << "[3] Disarm" << endl;
         }
+        
+        if (!player_Skill.discoveredEightGates) {
+            cout << "[4] ----- -----" << endl;
+        } else if (player_skill_Cooldown.count_forGates > 0 && !check_Gate.ActiveEightGate) {
+            cout << "[4] Eight Gates (" << player_skill_Cooldown.count_forGates << ")" << endl;
+        } else {
+            if (!player_Skill.discoveredHealGates) {
+                cout << "[4] ACTIVE (G1)" << endl;
+            } else if (player_skill_Cooldown.count_forGates > 0 && !check_Gate.ActiveHealGate) {
+                cout << "[4] Heal Gates (G1) (" player_skill_Cooldown.count_forGates << ")" << endl;
+            } else {
+                cout << "[4] ACTIVE (G2)" << endl;
+            }
+        }
+        
+        cin >> player.input;
+        
+        switch(player.input){
+            case 1:
+                
+            break;
+        }
 	    
 
     return 0;

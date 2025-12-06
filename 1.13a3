@@ -309,7 +309,6 @@ struct deathCheck{
             if (check_Gate.ActiveEightGate){
                 player_Stats.keiATK*= 1.8;
             }
-            //To be fixed later:
             if (check_Gate.ActiveHealGate){
                 player_Stats.keiHP = player_Stats.keiHP + (player_Stats.keiHP * 0.1);
             }
@@ -323,6 +322,40 @@ struct deathCheck{
         void hp_display(){
             cout << "Kei:     " << player_Stats.keiHP << endl;
             cout << "Arlong:  " << boss_Stats.arHP << endl;
+        }
+        
+struct bossTauntCheck{
+    bool phase1;
+    bool phase2;
+    bool phase3;
+};
+    bossTauntCheck taunt_Check;
+        void boss_phases(){
+            if (boss_Stats.arHP > 1600){
+                boss_Stats.arATK = 520;
+                boss_Stats.arEND = 600;
+                taunt_Check.phase1 = true;
+                taunt_Check.phase2 = false;
+                taunt_Check.phase3 = false;
+            }
+            if (boss_Stats.arHP > 900 && boss_Stats.arHP <= 1600){
+                boss_Stats.arATK = 550;
+                boss_Stats.arEND = 600;
+                taunt_Check.phase1 = false;
+                taunt_Check.phase2 = true;
+                taunt_Check.phase3 = false;
+            }
+            if (boss_Stats.arHP >= 0 && boss_Stats.arHP <= 900){
+                boss_Stats.arATK = 600;
+                boss_Stats.arEND = 660;
+                taunt_Check.phase1 = false;
+                taunt_Check.phase2 = false;
+                taunt_Check.phase3 = true;
+            }
+        }
+        
+        void battle_turn_skip(){
+            battleTurnSkip = true;
         }
 ///M A I N * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *///
 
@@ -476,6 +509,7 @@ int main(){
     set_to_max();
     
     for (iter.j; iter.j <= 48; iter.j++){
+        boss_phases();
 	    death_check_func();
 	    if (death_Check.playerHasDied == true || death_Check.arHasDied == true){
 	        iter.j += 50;
@@ -519,10 +553,28 @@ int main(){
         
         cin >> player.input;
         
-        switch(player.input){
-            case 1:
-                
-            break;
+        if (!battleTurnSkip){
+            switch(player.input){
+                case 1:
+                    boss_Stats.armaxHP = boss_Stats.armaxHP - (player_Stats.keiATK - boss_Stats.arEND);
+                break;
+                case 2:
+                    if (!player_Skill.discoveredStagger) {
+                        cout << "'???'" << endl;
+                        cout << "Kei attacks instead." << endl;
+                        boss_Stats.armaxHP = boss_Stats.armaxHP - (player_Stats.keiATK - boss_Stats.arEND);
+                    } else if (player_skill_Cooldown.count_forStagger > 0) {
+                        cout << "On cooldown!" << endl;
+                        cout << "Kei attacks instead." << endl;
+                        boss_Stats.armaxHP = boss_Stats.armaxHP - (player_Stats.keiATK - boss_Stats.arEND);
+                    } else {
+                        boss_Stats.armaxHP = boss_Stats.armaxHP - (player_Stats.keiATK - boss_Stats.arEND);
+                        battle_turn_skip();
+                    }  
+                break;
+                case 3:
+                break;
+            }
         }
 	    
 
